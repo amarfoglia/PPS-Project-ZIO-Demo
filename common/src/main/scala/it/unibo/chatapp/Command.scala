@@ -1,49 +1,78 @@
-package it.unibo.chatapp.http
+package it.unibo.chatapp
 
-import it.unibo.chatapp.Domain.Message
-import it.unibo.chatapp.Domain.Room
-import it.unibo.chatapp.Domain.RoomId
-import it.unibo.chatapp.Domain.User
-import it.unibo.chatapp.Domain.UserId
-import zio.json._
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
-object Command: 
-  enum ServerCommand:
-    case SendAvailableRoms(rooms: Set[Room]) extends ServerCommand
+/**
+ * Represents a group of commands send from the server and containing bootstrap
+ * information.
+ */
+enum ServerCommand:
+  case SendAvailableRoms(rooms: Set[Room]) extends ServerCommand
 
-  object ServerCommand:
-    implicit val decoder: JsonDecoder[ServerCommand] =
-      DeriveJsonDecoder.gen[ServerCommand]
-    
-    implicit val encoder: JsonEncoder[ServerCommand] =
-      DeriveJsonEncoder.gen[ServerCommand]
+object ServerCommand:
 
-  enum ServerRoomCommand:
-    case SendConnectedUsers(connectedUsers: Long) extends ServerRoomCommand
-    case SendRoomMessage(message: Message) extends ServerRoomCommand
+  implicit val decoder: JsonDecoder[ServerCommand] =
+    DeriveJsonDecoder.gen[ServerCommand]
 
-  object ServerRoomCommand:
-    implicit val decoder: JsonDecoder[ServerRoomCommand] =
-      DeriveJsonDecoder.gen[ServerRoomCommand]
-    
-    implicit val encoder: JsonEncoder[ServerRoomCommand] =
-      DeriveJsonEncoder.gen[ServerRoomCommand]
+  implicit val encoder: JsonEncoder[ServerCommand] =
+    DeriveJsonEncoder.gen[ServerCommand]
 
-  sealed trait ClientCommand
-  case object Subscribe extends ClientCommand
-  case class SubscribeRoom(roomId: RoomId) extends ClientCommand
-  sealed trait ClientActionCommand extends ClientCommand
-  case class JoinRoom(roomId: RoomId, userId: UserId) extends ClientActionCommand
-  case class LeaveRoom(userId: UserId) extends ClientActionCommand
-  case class SendTextMessage(
-    roomId: RoomId, 
-    user: User, 
-    messageBody: String
-  ) extends ClientActionCommand
-    
-  object ClientCommand:
-    implicit val decoder: JsonDecoder[ClientCommand] =
-      DeriveJsonDecoder.gen[ClientCommand]
-    
-    implicit val encoder: JsonEncoder[ClientCommand] =
-      DeriveJsonEncoder.gen[ClientCommand]
+/**
+ * Represents a group of commands send from the server and containing information
+ * about a specific [[Room]].
+ */
+enum ServerRoomCommand:
+  case SendConnectedUsers(connectedUsers: Long) extends ServerRoomCommand
+  case SendRoomMessage(message: Message)        extends ServerRoomCommand
+
+object ServerRoomCommand:
+
+  implicit val decoder: JsonDecoder[ServerRoomCommand] =
+    DeriveJsonDecoder.gen[ServerRoomCommand]
+
+  implicit val encoder: JsonEncoder[ServerRoomCommand] =
+    DeriveJsonEncoder.gen[ServerRoomCommand]
+
+/**
+ * Represents a group of commands send from the client to the server.
+ */
+sealed trait ClientCommand
+
+/**
+ * Represents a client subscription required to receive bootstrap information.
+ */
+case object Subscribe extends ClientCommand
+
+/**
+ * Represents a client subscription required to receive information about a
+ * specific [[Room]]
+ *
+ * @param roomId
+ *   identifies the [[Room]] to subscribe to.
+ */
+case class SubscribeRoom(roomId: RoomId) extends ClientCommand
+
+/**
+ * Specialization of [[ClientCommand]] which has an active role within the
+ * application logic.
+ */
+sealed trait ClientActionCommand                    extends ClientCommand
+case class JoinRoom(roomId: RoomId, userId: UserId) extends ClientActionCommand
+case class LeaveRoom(userId: UserId)                extends ClientActionCommand
+
+case class SendTextMessage(
+  roomId: RoomId,
+  user: User,
+  messageBody: String
+) extends ClientActionCommand
+
+object ClientCommand:
+
+  implicit val decoder: JsonDecoder[ClientCommand] =
+    DeriveJsonDecoder.gen[ClientCommand]
+
+  implicit val encoder: JsonEncoder[ClientCommand] =
+    DeriveJsonEncoder.gen[ClientCommand]
