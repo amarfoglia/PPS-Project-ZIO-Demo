@@ -1,0 +1,13 @@
+[
+  {
+    "id": "fbb6b88b-8c92-49ad-8d44-f3228be38b85",
+    "name": "Test Room 1",
+    "description": "room used for testing"
+  },
+
+  {
+    "id": "fbb6b88b-8c92-49ad-8d44-f3228be38b45",
+    "name": "Test Room 2",
+    "description": "room used for testing"
+  }
+]
